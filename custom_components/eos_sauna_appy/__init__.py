@@ -3,7 +3,6 @@
 For more details about this integration, please refer to
 https://github.com/GitDakky/eos_sauna_appy
 """
-import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry

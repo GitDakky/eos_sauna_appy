@@ -1,4 +1,5 @@
 """Switch platform for EOS Sauna Appy."""
+import asyncio
 from homeassistant.components.switch import SwitchEntity, SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -109,7 +110,9 @@ class EosSaunaControlSwitch(CoordinatorEntity, SwitchEntity):
         LOGGER.debug(f"Turning OFF {self.name} via API call.")
         try:
             await self._turn_on_off_service_call(False)
-            # After sending command, refresh the coordinator that holds the desired state
+            # Add a small delay to allow the device to process the command
+            # before refreshing its state.
+            await asyncio.sleep(5) # Wait 5 seconds
             await self.coordinator.async_request_refresh()
         except Exception as e:
             LOGGER.error(f"Error turning OFF {self.name}: {e}")

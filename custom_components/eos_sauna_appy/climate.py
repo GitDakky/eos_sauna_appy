@@ -1,4 +1,5 @@
 """Climate platform for EOS Sauna Appy."""
+import asyncio
 from typing import Any, List, Optional
 
 from homeassistant.components.climate import (
@@ -174,11 +175,13 @@ class EosSaunaClimate(CoordinatorEntity, ClimateEntity):
                 await self._client.async_set_sauna_onoff(True)
             elif hvac_mode == HVACMode.OFF:
                 await self._client.async_set_sauna_onoff(False)
+                # Add a small delay to allow the device to process the command
+                await asyncio.sleep(5) # Wait 5 seconds
             else:
                 LOGGER.warning(f"Unsupported HVAC mode: {hvac_mode}")
                 return
             # Refresh both coordinators
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh() # This is settings_coordinator
             await self.status_coordinator.async_request_refresh()
         except Exception as e:
             LOGGER.error(f"Error setting HVAC mode: {e}")

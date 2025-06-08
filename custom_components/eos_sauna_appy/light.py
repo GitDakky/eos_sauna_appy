@@ -1,4 +1,5 @@
 """Light platform for EOS Sauna Appy."""
+import asyncio
 from typing import Any
 
 from homeassistant.components.light import (
@@ -124,6 +125,8 @@ class EosSaunaLight(CoordinatorEntity, LightEntity):
         LOGGER.debug(f"Turning OFF {self.name}")
         try:
             await self._client.async_set_light_onoff(False)
+            # Add a small delay to allow the device to process the command
+            await asyncio.sleep(5) # Wait 5 seconds
             await self.coordinator.async_request_refresh()
         except Exception as e:
             LOGGER.error(f"Error turning OFF {self.name}: {e}")
