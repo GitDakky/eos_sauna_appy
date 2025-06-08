@@ -34,9 +34,9 @@ https://github.com/GitDakky/eos_sauna_appy/issues
 """
 
 # API Endpoints
-API_ENDPOINT_STATUS = "/__//usr/eos/is" # Actual status
-API_ENDPOINT_SETTINGS = "/__//usr/eos/setdev" # Desired/device settings
-API_ENDPOINT_CONTROL = "/__//usr/eos/setcld" # Control endpoint
+API_ENDPOINT_STATUS = "/__/usr/eos/is" # Actual status
+API_ENDPOINT_SETTINGS = "/__/usr/eos/setdev" # Desired/device settings
+API_ENDPOINT_CONTROL = "/__/usr/eos/setcld" # Control endpoint
 
 # API Keys from /usr/eos/is (Actual Status)
 API_KEY_SAUNA_STATE_ACTUAL = "S" # 0: Inactive, 1: Finnish, 2: BIO, 3: After burner, 4: Fault
