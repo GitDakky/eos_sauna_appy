@@ -1,0 +1,7 @@
+{
+  "name": "EOS Sauna Appy",
+  "render_readme": true,
+  "iot_class": "local_polling",
+  "country": "DE",
+  "domains": ["climate", "sensor", "switch", "light", "number"]
+}

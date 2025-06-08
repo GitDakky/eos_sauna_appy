@@ -1,0 +1,13 @@
+{
+  "domain": "eos_sauna_appy",
+  "name": "EOS Sauna Appy",
+  "version": "0.1.0",
+  "documentation": "https://github.com/GitDakky/eos_sauna_appy",
+  "issue_tracker": "https://github.com/GitDakky/eos_sauna_appy/issues",
+  "codeowners": ["@GitDakky"],
+  "requirements": ["aiohttp"],
+  "iot_class": "local_polling",
+  "integration_type": "device",
+  "config_flow": true,
+  "loggers": ["custom_components.eos_sauna_appy"]
+}
