@@ -1,8 +1,9 @@
 """EOS Sauna Appy API Client."""
 import asyncio
 import socket
+from typing import Any
+
 import aiohttp
-import async_timeout
 
 from .const import (
     LOGGER,
@@ -37,22 +38,24 @@ class EosSaunaApiClient:
 
     async def _api_wrapper(
         self, method: str, url: str, data: dict | None = None, headers: dict | None = None
-    ) -> any:
+    ) -> Any:
         """Wrap API calls."""
         try:
-            async with async_timeout.timeout(TIMEOUT):
-                response = await self._session.request(
-                    method=method,
-                    url=f"{self._base_url}{url}",
-                    headers=headers,
-                    json=data,
-                )
+            async with self._session.request(
+                method=method,
+                url=f"{self._base_url}{url}",
+                headers=headers,
+                json=data,
+                timeout=aiohttp.ClientTimeout(total=TIMEOUT),
+            ) as response:
                 if response.status in (401, 403):
                     raise EosSaunaApiAuthError(
                         f"Invalid credentials for {url}: {response.status}"
                     )
                 response.raise_for_status()
                 return await response.json()
+        except EosSaunaApiAuthError:
+            raise
         except asyncio.TimeoutError as exception:
             raise EosSaunaApiCommunicationError(
                 f"Timeout error fetching data from {url}: {exception}"
@@ -75,7 +78,7 @@ class EosSaunaApiClient:
         """Get the desired/device settings from the sauna."""
         return await self._api_wrapper("get", API_ENDPOINT_SETTINGS)
 
-    async def async_set_control_value(self, key: str, value: any) -> dict:
+    async def async_set_control_value(self, key: str, value: Any) -> dict:
         """Set a control value on the sauna."""
         payload = {key: value}
         LOGGER.debug(f"Sending control payload: {payload}")

@@ -6,7 +6,7 @@ LOGGER: Logger = getLogger(__package__)
 
 NAME = "EOS Sauna Appy"
 DOMAIN = "eos_sauna_appy"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 ATTRIBUTION = "Data provided by EOS Sauna HTTP API"
 
 # Platforms
