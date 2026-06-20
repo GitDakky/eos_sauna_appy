@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -110,7 +111,7 @@ class EosSaunaClimate(CoordinatorEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_action(self) -> HVACMode | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported.
         Need to map sauna status S to HVACAction.
         S: 0: Inactive, 1: Finnish mode, 2: BIO mode, 3: After burner mode, 4: Fault
@@ -118,15 +119,15 @@ class EosSaunaClimate(CoordinatorEntity, ClimateEntity):
         if self.available:
             sauna_status_actual = self.status_coordinator.data.get(API_KEY_SAUNA_STATE_ACTUAL)
             if sauna_status_actual in [1, 2, 3]: # Finnish, BIO, After burner
-                return HVACMode.HEATING
+                return HVACAction.HEATING
             elif sauna_status_actual == 0: # Inactive
-                 return HVACMode.OFF
+                return HVACAction.OFF
             elif sauna_status_actual == 4: # Fault
-                return HVACMode.OFF # Or some other state if HA supports error state for HVACAction
+                return HVACAction.OFF # Or some other state if HA supports error state for HVACAction
             # If Sxd is 1 (HEAT desired) but actual status is 0 (Inactive), it might be idle
             if str(self.coordinator.data.get(API_KEY_SAUNA_STATE_DESIRED)) == "1" and sauna_status_actual == 0:
-                return HVACMode.IDLE
-        return HVACMode.OFF # Default to OFF if unknown
+                return HVACAction.IDLE
+        return HVACAction.OFF # Default to OFF if unknown
 
     @property
     def current_temperature(self) -> float | None:

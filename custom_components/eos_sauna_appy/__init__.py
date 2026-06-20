@@ -8,7 +8,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import EosSaunaApiClient
 from .const import (
@@ -51,11 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SCAN_INTERVAL_SETTINGS,
     )
 
-    await status_coordinator.async_refresh()
-    await settings_coordinator.async_refresh()
-
-    if not status_coordinator.last_update_success or not settings_coordinator.last_update_success:
-        raise UpdateFailed("Initial data fetch failed")
+    await status_coordinator.async_config_entry_first_refresh()
+    await settings_coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
