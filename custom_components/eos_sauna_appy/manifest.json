@@ -1,7 +1,7 @@
 {
   "domain": "eos_sauna_appy",
   "name": "EOS Sauna Appy",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "documentation": "https://github.com/GitDakky/eos_sauna_appy",
   "issue_tracker": "https://github.com/GitDakky/eos_sauna_appy/issues",
   "codeowners": ["@GitDakky"],

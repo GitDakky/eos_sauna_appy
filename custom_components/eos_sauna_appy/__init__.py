@@ -4,11 +4,13 @@ For more details about this integration, please refer to
 https://github.com/GitDakky/eos_sauna_appy
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.helpers.config_validation as cv
 
 from .api import EosSaunaApiClient
 from .const import (
@@ -20,6 +22,20 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_CLEAR_SCHEDULED_START = "clear_scheduled_start"
+SERVICE_SCHEMA = vol.Schema({vol.Optional("config_entry_id"): cv.string})
+
+
+@callback
+def _async_find_entry_id(hass: HomeAssistant, call: ServiceCall) -> str | None:
+    """Resolve config entry for a service call."""
+    if call.data.get("config_entry_id"):
+        return call.data["config_entry_id"]
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if len(entries) == 1:
+        return entries[0].entry_id
+    return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -64,6 +80,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if not hass.services.has_service(DOMAIN, SERVICE_CLEAR_SCHEDULED_START):
+
+        async def clear_scheduled_start(call: ServiceCall) -> None:
+            entry_id = _async_find_entry_id(hass, call)
+            if not entry_id or entry_id not in hass.data[DOMAIN]:
+                _LOGGER.error("clear_scheduled_start: no EOS Sauna config entry found")
+                return
+            client = hass.data[DOMAIN][entry_id]["client"]
+            await client.async_clear_scheduled_start()
+            settings_coordinator = hass.data[DOMAIN][entry_id]["settings_coordinator"]
+            await settings_coordinator.async_request_refresh()
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_CLEAR_SCHEDULED_START,
+            clear_scheduled_start,
+            schema=SERVICE_SCHEMA,
+        )
 
     return True
 
