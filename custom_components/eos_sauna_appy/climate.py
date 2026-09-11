@@ -19,6 +19,7 @@ from .const import (
     API_KEY_SAUNA_STATE_ACTUAL, # S (for current HVAC action)
     API_KEY_SAUNA_STATE_DESIRED, # Sxd (for HVAC mode)
     API_KEY_CURRENT_TEMP, # T
+    API_KEY_BENCH_TEMP, # BT
     API_KEY_TARGET_TEMP_DESIRED, # Td
     MANUFACTURER,
     NAME as INTEGRATION_NAME,
@@ -130,14 +131,21 @@ class EosSaunaClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        """Return the current temperature.
+
+        The target temperature is regulated against the bench sensor when one is
+        installed, so report BT and only fall back to the heater sensor T (which
+        runs far hotter and merely limits at ~120 °C) when BT is missing.
+        """
         if self.available:
-            temp = self.status_coordinator.data.get(API_KEY_CURRENT_TEMP)
-            if temp is not None:
+            for key in (API_KEY_BENCH_TEMP, API_KEY_CURRENT_TEMP):
+                temp = self.status_coordinator.data.get(key)
+                if temp is None:
+                    continue
                 try:
                     return float(temp)
                 except (ValueError, TypeError):
-                    LOGGER.warning(f"Could not parse current temperature: {temp}")
+                    LOGGER.warning(f"Could not parse temperature {key}: {temp}")
         return None
 
     @property

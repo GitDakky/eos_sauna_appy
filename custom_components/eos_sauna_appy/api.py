@@ -9,6 +9,7 @@ from .const import (
     API_ENDPOINT_STATUS,
     API_ENDPOINT_SETTINGS,
     API_ENDPOINT_CONTROL,
+    SCHEDULED_START_DISABLED,
 )
 
 TIMEOUT = 10
@@ -81,6 +82,11 @@ class EosSaunaApiClient:
         LOGGER.debug(f"Sending control payload: {payload}")
         return await self._api_wrapper("post", API_ENDPOINT_CONTROL, data=payload)
 
+    async def async_set_control_values(self, values: dict) -> dict:
+        """Set multiple control values in one request."""
+        LOGGER.debug(f"Sending control payload: {values}")
+        return await self._api_wrapper("post", API_ENDPOINT_CONTROL, data=values)
+
     async def async_set_light_onoff(self, is_on: bool) -> dict:
         """Turn the light on or off."""
         return await self.async_set_control_value("Lxc", 1 if is_on else 0)
@@ -101,7 +107,6 @@ class EosSaunaApiClient:
 
     async def async_set_target_temperature(self, temperature: int) -> dict:
         """Set the target temperature."""
-        # Assuming a reasonable range, e.g., 30-115 C based on HTML
         if not 30 <= temperature <= 115:
             raise ValueError("Target temperature must be between 30 and 115.")
         return await self.async_set_control_value("Tc", temperature)
@@ -111,3 +116,28 @@ class EosSaunaApiClient:
         if not 0 <= humidity <= 100:
             raise ValueError("Target humidity must be between 0 and 100.")
         return await self.async_set_control_value("Hc", humidity)
+
+    async def async_clear_scheduled_start(self) -> dict:
+        """Disable delayed-start timer (Vorwahlzeit) — must run before every manual start."""
+        payload = {
+            "TStHc": SCHEDULED_START_DISABLED,
+            "TStMc": SCHEDULED_START_DISABLED,
+        }
+        LOGGER.debug(f"Clearing scheduled start: {payload}")
+        return await self._api_wrapper("post", API_ENDPOINT_CONTROL, data=payload)
+
+    async def async_set_heating_period(self, hours: int, minutes: int) -> dict:
+        """Set auto-stop heating period and always clear delayed start."""
+        if not 0 <= hours <= 24:
+            raise ValueError("Heating period hours must be between 0 and 24.")
+        if not 0 <= minutes < 60:
+            raise ValueError("Heating period minutes must be between 0 and 59.")
+        payload = {
+            "Cxc": hours,
+            "AHxc": hours,
+            "AHmc": minutes,
+        }
+        LOGGER.debug(f"Sending heating period payload: {payload}")
+        result = await self._api_wrapper("post", API_ENDPOINT_CONTROL, data=payload)
+        await self.async_clear_scheduled_start()
+        return result
